@@ -17,8 +17,7 @@ model:
 
 # 数据配置
 data:
-  train_data_path: "data/pretrain_train.jsonl"
-#  eval_data_path: "data/pretrain_eval.jsonl"
+  train_data_path: "data/pretrain_hq.jsonl"
   max_length: 2048
   num_workers: 4
 
