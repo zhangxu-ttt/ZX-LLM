@@ -1,0 +1,81 @@
+# DPO（Direct Preference Optimization）配置文件
+
+# Tokenizer路径
+tokenizer_path: "tokenizer/minimind"
+
+# 模型配置
+model:
+  vocab_size: 6400
+  n_layers: 12
+  d_model: 768
+  q_head: 8
+  kv_head: 4
+  d_ff: 3072
+  dropout_p: 0.1
+  max_seq_length: 2048
+  rope_theta: 1000000.0
+  
+  # DPO需要从SFT模型加载
+  pretrained_model_path: null      # 例如: "output/sft/checkpoint-5000"
+  
+  # 参考模型路径（如果为null，则使用初始模型作为参考模型）
+  reference_model_path: null
+
+# 数据配置
+data:
+  train_data_path: "data/dpo_train.jsonl"
+  eval_data_path: "data/dpo_eval.jsonl"
+  max_length: 2048
+  num_workers: 4
+
+# 训练配置
+training:
+  num_epochs: 1                    # DPO通常训练较少的epoch
+  learning_rate: 5.0e-7            # DPO使用非常小的学习率
+  weight_decay: 0.0                # DPO通常不使用weight decay
+  warmup_steps: 50
+  max_steps: -1
+  
+  # 批次大小配置
+  per_device_train_batch_size: 2   # DPO需要同时处理chosen和rejected，显存占用大
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8
+  
+  # 日志和保存
+  eval_steps: 100
+  save_steps: 200
+  logging_steps: 10
+  
+  # 优化器配置
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  
+  # 其他配置
+  gradient_checkpointing: true
+  max_grad_norm: 1.0
+  seed: 42
+
+# DPO特定配置
+dpo:
+  beta: 0.1                        # DPO温度参数，控制KL散度的权重
+  label_smoothing: 0.0             # 标签平滑
+  reference_free: false            # 是否使用reference-free DPO
+
+# DeepSpeed配置
+deepspeed:
+  config_path: "config/deepspeed_config_stage2.json"
+  
+# 输出配置
+output:
+  output_dir: "output/dpo"
+  save_total_limit: 3
+  resume_from_checkpoint: null
+  
+# WandB配置
+wandb:
+  enabled: true
+  project: "zx-llm-dpo"
+  run_name: "dpo_run_001"
+  entity: null
+

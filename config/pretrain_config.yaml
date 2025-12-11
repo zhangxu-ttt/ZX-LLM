@@ -1,0 +1,69 @@
+# 预训练配置文件
+
+# Tokenizer路径
+tokenizer_path: "tokenizer/minimind"
+
+# 模型配置
+model:
+  vocab_size: 6400
+  n_layers: 12
+  d_model: 768
+  q_head: 8
+  kv_head: 4
+  d_ff: 3072
+  dropout_p: 0.1
+  max_seq_length: 2048
+  rope_theta: 1000000.0
+
+# 数据配置
+data:
+  train_data_path: "data/pretrain_train.jsonl"
+#  eval_data_path: "data/pretrain_eval.jsonl"
+  max_length: 2048
+  num_workers: 4
+
+# 训练配置
+training:
+  num_epochs: 3
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  warmup_steps: 1000
+  max_steps: -1                    # -1表示使用num_epochs
+  
+  # 批次大小配置
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4   # 有效批次大小 = 4 * 4 * num_gpus
+  
+  # 日志和保存
+  eval_steps: 1000                  # 每多少步评估一次
+  save_steps: 2000                 # 每多少步保存一次
+  logging_steps: 10                # 每多少步记录日志
+  
+  # 优化器配置
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  
+  # 其他配置
+  gradient_checkpointing: true     # 启用梯度检查点
+  max_grad_norm: 1.0              # 梯度裁剪
+  seed: 42
+  
+# DeepSpeed配置
+deepspeed:
+  config_path: "config/deepspeed_config_stage2.json"
+  
+# 输出配置
+output:
+  output_dir: "output/pretrain"
+  save_total_limit: 3              # 最多保存3个检查点
+  resume_from_checkpoint: null     # 从检查点恢复训练，null表示从头开始
+  
+# WandB配置
+wandb:
+  enabled: true
+  project: "zx-llm-pretrain"
+  run_name: "pretrain_run_001"
+  entity: null                     # WandB用户名或团队名
+
