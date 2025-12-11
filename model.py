@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 from typing import Optional, Tuple, List
 
 from transformers import PreTrainedModel, PretrainedConfig, GenerationMixin
@@ -363,6 +364,7 @@ class TransformerLayer(nn.Module):
 
 class TransformerModel(PreTrainedModel, GenerationMixin):
     config_class = ModelConfig
+    supports_gradient_checkpointing = True 
 
     def __init__(self, config: ModelConfig):
         super().__init__(config)
@@ -388,6 +390,14 @@ class TransformerModel(PreTrainedModel, GenerationMixin):
         self.norm = RMSNorm(self.d_model)
         self.lm_head = nn.Linear(self.d_model, self.vocab_size)
 
+        self.gradient_checkpointing = False
+
+    def gradient_checkpointing_enable(self):
+        self.gradient_checkpointing = True
+    
+    def gradient_checkpointing_disable(self):
+        self.gradient_checkpointing = False
+
     def forward(self,
                 input_ids: torch.Tensor,
                 attention_mask: torch.Tensor = None,
@@ -410,8 +420,28 @@ class TransformerModel(PreTrainedModel, GenerationMixin):
 
         for i, layer in enumerate(self.layers):
             kv_cache = past_kv_caches[i] if past_kv_caches is not None else None
-            x, kv_cache = layer(x=x, attn_mask=attention_mask, use_cache=use_cache, kv_cache=kv_cache,
-                                start_pos=start_pos)
+
+            if self.gradient_checkpointing and self.training and not use_cache:
+                def create_custom_forward(module):
+                    def custom_forward(*inputs):
+                        # inputs: (x, attn_mask, use_cache, kv_cache, start_pos)
+                        return module(x=inputs[0], attn_mask=inputs[1], 
+                                    use_cache=inputs[2], kv_cache=inputs[3], 
+                                    start_pos=inputs[4])
+                    return custom_forward
+
+                x, kv_cache = checkpoint(
+                    create_custom_forward(layer),
+                    x,
+                    attention_mask,
+                    use_cache,
+                    kv_cache,
+                    start_pos,
+                    use_reentrant=False 
+                )
+            else:
+                x, kv_cache = layer(x=x, attn_mask=attention_mask, use_cache=use_cache, kv_cache=kv_cache,
+                                    start_pos=start_pos)
 
             if output_hidden_states:
                 all_hidden_states.append(x)

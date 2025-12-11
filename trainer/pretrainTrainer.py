@@ -19,7 +19,7 @@ class PretrainTrainer(BaseTrainer):
         Returns:
             train_dataset, eval_dataset
         """
-        print("准备预训练数据集...")
+        self.print_main_process("准备预训练数据集...")
         
         # 训练集
         train_data_path = self.config['data']['train_data_path']
@@ -29,7 +29,7 @@ class PretrainTrainer(BaseTrainer):
             max_length=self.config['data']['max_length']
         )
         
-        print(f"训练集大小: {len(train_dataset)}")
+        self.print_main_process(f"训练集大小: {len(train_dataset)}")
         
         # 验证集
         eval_dataset = None
@@ -40,7 +40,7 @@ class PretrainTrainer(BaseTrainer):
                 tokenizer=self.tokenizer,
                 max_length=self.config['data']['max_length']
             )
-            print(f"验证集大小: {len(eval_dataset)}")
+            self.print_main_process(f"验证集大小: {len(eval_dataset)}")
         
         return train_dataset, eval_dataset
     

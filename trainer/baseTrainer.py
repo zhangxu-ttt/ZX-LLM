@@ -116,7 +116,7 @@ class BaseTrainer(ABC):
         # 如果指定了预训练模型路径，从检查点加载
         pretrained_path = self.config['model'].get('pretrained_model_path')
         if pretrained_path:
-            print(f"从预训练模型加载: {pretrained_path}")
+            self.print_main_process(f"从预训练模型加载: {pretrained_path}")
             model = TransformerModel.from_pretrained(pretrained_path)
         else:
             model = TransformerModel(model_config)
@@ -125,7 +125,7 @@ class BaseTrainer(ABC):
         if self.config['training'].get('gradient_checkpointing', False):
             if hasattr(model, 'gradient_checkpointing_enable'):
                 model.gradient_checkpointing_enable()
-                print("已启用梯度检查点")
+                self.print_main_process("已启用梯度检查点")
         
         return model
     
@@ -166,11 +166,11 @@ class BaseTrainer(ABC):
                 num_warmup_steps=self.config['training']['warmup_steps'],
                 num_training_steps=num_training_steps
             )
-        
-        print(f"DeepSpeed引擎已初始化 (Rank {self.local_rank})")
-        print(f"训练批次大小: {train_batch_size}")
-        print(f"每设备批次大小: {self.config['training']['per_device_train_batch_size']}")
-        print(f"梯度累积步数: {self.config['training']['gradient_accumulation_steps']}")
+
+        self.print_main_process(f"DeepSpeed引擎已初始化 (Rank {self.local_rank})")
+        self.print_main_process(f"训练批次大小: {train_batch_size}")
+        self.print_main_process(f"每设备批次大小: {self.config['training']['per_device_train_batch_size']}")
+        self.print_main_process(f"梯度累积步数: {self.config['training']['gradient_accumulation_steps']}")
         
         return model_engine, optimizer, lr_scheduler
     
@@ -200,22 +200,27 @@ class BaseTrainer(ABC):
                 config=self.config,
                 resume='allow'
             )
-            print("WandB已初始化")
+            self.print_main_process("WandB已初始化")
         except ImportError:
-            print("警告: wandb未安装，跳过WandB日志记录")
+            self.print_main_process("警告: wandb未安装，跳过WandB日志记录")
             self.config['wandb']['enabled'] = False
     
     def is_main_process(self) -> bool:
         """判断是否为主进程"""
         return self.local_rank in [-1, 0]
+
+    def print_main_process(self, message: str):
+        """仅在主进程打印消息"""
+        if self.is_main_process():
+            print(message)
     
     def train(self):
         """
         主训练循环
         """
-        print("=" * 80)
-        print("开始训练")
-        print("=" * 80)
+        self.print_main_process("=" * 80)
+        self.print_main_process("开始训练")
+        self.print_main_process("=" * 80)
         
         # 准备DataLoader
         train_dataloader = DataLoader(
@@ -237,11 +242,10 @@ class BaseTrainer(ABC):
         # 训练循环
         for epoch in range(self.epoch, num_epochs):
             self.epoch = epoch
-            
-            if self.is_main_process():
-                print(f"\n{'=' * 80}")
-                print(f"Epoch {epoch + 1}/{num_epochs}")
-                print(f"{'=' * 80}")
+
+            self.print_main_process(f"\n{'=' * 80}")
+            self.print_main_process(f"Epoch {epoch + 1}/{num_epochs}")
+            self.print_main_process(f"{'=' * 80}")
             
             epoch_loss = 0.0
             epoch_steps = 0
@@ -305,14 +309,14 @@ class BaseTrainer(ABC):
                 
                 # 检查是否达到最大步数
                 if max_steps > 0 and self.global_step >= max_steps:
-                    if self.is_main_process():
-                        print(f"\n已达到最大步数: {max_steps}")
+                    self.print_main_process(f"\n已达到最大步数: {max_steps}")
                     break
             
             # Epoch结束，保存检查点
             if self.is_main_process():
                 avg_epoch_loss = epoch_loss / epoch_steps
-                print(f"\nEpoch {epoch + 1} 完成，平均损失: {avg_epoch_loss:.4f}")
+
+            self.print_main_process(f"\nEpoch {epoch + 1} 完成，平均损失: {avg_epoch_loss:.4f}")
             
             self.save_checkpoint(tag=f"epoch-{epoch + 1}")
             
@@ -321,13 +325,12 @@ class BaseTrainer(ABC):
                 break
         
         # 训练结束
-        if self.is_main_process():
-            print("\n" + "=" * 80)
-            print("训练完成！")
-            print("=" * 80)
+        self.print_main_process("\n" + "=" * 80)
+        self.print_main_process("训练完成！")
+        self.print_main_process("=" * 80)
             
-            if self.wandb_run:
-                self.wandb_run.finish()
+        if self.wandb_run:
+            self.wandb_run.finish()
     
     @abstractmethod
     def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
