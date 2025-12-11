@@ -1,39 +1,89 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
+# test_single_gpu.py
+import torch
+from transformers import AutoTokenizer
 from model import TransformerModel, ModelConfig
+from dataset import TextDataset
+from torch.utils.data import DataLoader
 
-AutoConfig.register("zx_model", ModelConfig)
-AutoModelForCausalLM.register(ModelConfig, TransformerModel)
+print("=" * 80)
+print("单GPU测试（不使用DeepSpeed）")
+print("=" * 80)
 
-tokenizer = AutoTokenizer.from_pretrained("/Users/zhangxu/PycharmProjects/ZX-LLM/tokenizer/minimind")
+# 1. 加载tokenizer
+print("\n1. 加载tokenizer...")
+tokenizer = AutoTokenizer.from_pretrained("tokenizer/minimind")
+print("✅ Tokenizer加载成功")
 
-model_config = ModelConfig(
-    vocab_size=tokenizer.vocab_size,
-    max_seq_length=2048,
-    n_layers=12,
-    q_head=8,               
-    kv_head=4,
-    d_model=768,
-    d_ff=768*4,
-    dropout_p=0.1,          
-    rope_theta=1000000.0,   
+# 2. 创建数据集
+print("\n2. 加载数据集...")
+dataset = TextDataset(
+    data_path="data/pretrain_hq.jsonl",
+    tokenizer=tokenizer,
+    max_length=512
 )
-model = TransformerModel(model_config)
+print(f"✅ 数据集加载成功，大小: {len(dataset)}")
 
+# 3. 创建DataLoader
+print("\n3. 创建DataLoader...")
+dataloader = DataLoader(
+    dataset,
+    batch_size=1,
+    shuffle=False,
+    num_workers=0  # 重要：先用0
+)
+print("✅ DataLoader创建成功")
 
-prompt = '你好！我是一个学生。'
-input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+# 4. 测试数据迭代
+print("\n4. 测试数据迭代...")
+batch = next(iter(dataloader))
+print(f"✅ 数据批次获取成功")
+print(f"   x shape: {batch['x'].shape}")
+print(f"   y shape: {batch['y'].shape}")
 
+# 5. 创建模型
+print("\n5. 创建模型...")
+config = ModelConfig(
+    vocab_size=6400,
+    n_layers=12,
+    d_model=32,  # 你改的小模型
+    q_head=4,
+    kv_head=2,
+    d_ff=128,
+    max_seq_length=512
+)
+model = TransformerModel(config)
+print("✅ 模型创建成功")
 
-output_ids = model.generate(
-        input_ids,
-        attention_mask=None,
-        max_new_tokens=50,      # 生成最多 50 个新 token
-        do_sample=True,         # 使用采样
-        temperature=0.7,        # 温度
-        top_k=50,               # Top-K 采样
-        top_p=0.9,              # Top-P 采样
-        use_cache=True,         # 使用 KV 缓存
-        pad_token_id=tokenizer.pad_token_id,
-        eos_token_id=tokenizer.eos_token_id,
-    )
-print(tokenizer.decode(output_ids[0], skip_special_tokens=True))
+# 6. 移动到GPU
+print("\n6. 移动模型到GPU...")
+device = torch.device("cuda:0")
+model = model.to(device)
+print("✅ 模型移动成功")
+
+# 7. 测试前向传播
+print("\n7. 测试前向传播...")
+input_ids = batch['x'].to(device)
+labels = batch['y'].to(device)
+
+model.eval()
+with torch.no_grad():
+    outputs = model(input_ids=input_ids, labels=labels)
+print(f"✅ 前向传播成功，Loss: {outputs.loss.item():.4f}")
+
+# 8. 测试反向传播
+print("\n8. 测试反向传播...")
+model.train()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+
+for i in range(3):
+    outputs = model(input_ids=input_ids, labels=labels)
+    loss = outputs.loss
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    print(f"   Step {i + 1}, Loss: {loss.item():.4f}")
+
+print("\n✅ 所有测试通过！")
+print("=" * 80)
