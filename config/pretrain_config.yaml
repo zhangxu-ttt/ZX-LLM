@@ -45,7 +45,7 @@ training:
   adam_epsilon: 1.0e-8
   
   # 其他配置
-  gradient_checkpointing: true     # 启用梯度检查点
+  gradient_checkpointing: false     # 启用梯度检查点
   max_grad_norm: 1.0              # 梯度裁剪
   seed: 42
   
