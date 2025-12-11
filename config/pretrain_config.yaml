@@ -30,9 +30,9 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 4
+  per_device_train_batch_size: 2
   per_device_eval_batch_size: 4
-  gradient_accumulation_steps: 4   # 有效批次大小 = 4 * 4 * num_gpus
+  gradient_accumulation_steps: 8   # 有效批次大小 = per_device_train_batch_size * gradient_accumulation_steps * num_gpus
   
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次

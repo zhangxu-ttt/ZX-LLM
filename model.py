@@ -10,6 +10,7 @@ from transformers import PreTrainedModel, PretrainedConfig, GenerationMixin
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
 
+
 class ModelConfig(PretrainedConfig):
     model_type = 'zx_model'
 
@@ -361,6 +362,18 @@ class TransformerLayer(nn.Module):
 
         return x, kv_cache
 
+def create_custom_forward(module):
+    def custom_forward(hidden_states, attn_mask):
+        # 简化参数，只传必需的
+        output, _ = module(
+            x=hidden_states,
+            attn_mask=attn_mask,
+            use_cache=False,  # checkpoint 时不使用 cache
+            kv_cache=None,
+            start_pos=0
+        )
+        return output
+    return custom_forward
 
 class TransformerModel(PreTrainedModel, GenerationMixin):
     config_class = ModelConfig
@@ -422,14 +435,6 @@ class TransformerModel(PreTrainedModel, GenerationMixin):
             kv_cache = past_kv_caches[i] if past_kv_caches is not None else None
 
             if self.gradient_checkpointing and self.training and not use_cache:
-                def create_custom_forward(module):
-                    def custom_forward(*inputs):
-                        # inputs: (x, attn_mask, use_cache, kv_cache, start_pos)
-                        return module(x=inputs[0], attn_mask=inputs[1], 
-                                    use_cache=inputs[2], kv_cache=inputs[3], 
-                                    start_pos=inputs[4])
-                    return custom_forward
-
                 x, kv_cache = checkpoint(
                     create_custom_forward(layer),
                     x,
