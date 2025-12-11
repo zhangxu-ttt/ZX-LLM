@@ -50,14 +50,15 @@ def main():
     """主函数"""
     # 解析参数
     args = parse_args()
-    
-    print("=" * 80)
-    print("DeepSpeed训练")
-    print("=" * 80)
-    print(f"任务类型: {args.task_type}")
-    print(f"配置文件: {args.config_path}")
-    print(f"Local Rank: {args.local_rank}")
-    print("=" * 80)
+
+    if args.local_rank in [-1, 0]:
+        print("=" * 80)
+        print("DeepSpeed训练")
+        print("=" * 80)
+        print(f"任务类型: {args.task_type}")
+        print(f"配置文件: {args.config_path}")
+        print(f"Local Rank: {args.local_rank}")
+        print("=" * 80)
     
     # 根据任务类型选择训练器
     if args.task_type == 'pretrain':
@@ -82,10 +83,12 @@ def main():
     try:
         trainer.train()
     except KeyboardInterrupt:
-        print("\n训练被用户中断")
+        if args.local_rank in [-1, 0]:
+            print("\n训练被用户中断")
         sys.exit(0)
     except Exception as e:
-        print(f"\n训练过程中出错: {e}")
+        if args.local_rank in [-1, 0]:
+            print(f"\n训练过程中出错: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

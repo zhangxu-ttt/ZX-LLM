@@ -28,12 +28,6 @@
   },
   
   "wall_clock_breakdown": false,
-  "steps_per_print": 10,
-  
-  "tensorboard": {
-    "enabled": false,
-    "output_path": "output/tensorboard",
-    "job_name": "deepspeed_training"
-  }
+  "steps_per_print": 10
 }
 
