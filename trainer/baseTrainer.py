@@ -142,10 +142,11 @@ class BaseTrainer(ABC):
             ds_config = json.load(f)
         
         # 设置批次大小参数
+        world_size = int(os.environ.get('WORLD_SIZE', '1'))
         train_batch_size = (
             self.config['training']['per_device_train_batch_size'] *
             self.config['training']['gradient_accumulation_steps'] *
-            torch.cuda.device_count()
+            world_size
         )
         ds_config['train_batch_size'] = train_batch_size
         ds_config['train_micro_batch_size_per_gpu'] = self.config['training']['per_device_train_batch_size']
@@ -179,7 +180,7 @@ class BaseTrainer(ABC):
         max_steps = self.config['training'].get('max_steps', -1)
         if max_steps > 0:
             return max_steps
-        
+        world_size = int(os.environ.get('WORLD_SIZE', '1'))
         num_epochs = self.config['training']['num_epochs']
         steps_per_epoch = len(self.train_dataset) // (
             self.config['training']['per_device_train_batch_size'] *
