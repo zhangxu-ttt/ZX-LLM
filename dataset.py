@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from pathlib import Path
 import random
 import json
@@ -13,7 +13,7 @@ from utils import kmp_search, read_jsonl
 class TextDataset(Dataset):
     def __init__(
             self,
-            data_path: Optional[str, List[str]],
+            data_path: Union[str, List[str]],
             tokenizer,
             max_length: int = 256
     ):
@@ -30,7 +30,7 @@ class TextDataset(Dataset):
 
         self.data = self.load_data(data_path)
 
-    def load_data(self, data_path: Optional[str, List[str]]) -> List[str]:
+    def load_data(self, data_path: Union[str, List[str]]) -> List[str]:
         if isinstance(data_path, str):
             texts = read_jsonl(data_path)
         else:
@@ -68,7 +68,7 @@ class TextDataset(Dataset):
 class ChatMLDataset(Dataset):
     def __init__(
             self,
-            data_path: Optional[str, List[str]],
+            data_path: Union[str, List[str]],
             tokenizer,
             max_length: int = 256
     ):
@@ -85,7 +85,7 @@ class ChatMLDataset(Dataset):
         self.answer_start_token_id_list = None
         self.answer_end_token_id_list = [self.eos_token_id]
 
-    def load_data(self, data_path: Optional[str, List[str]]) -> List[str]:
+    def load_data(self, data_path: Union[str, List[str]]) -> List[str]:
         if isinstance(data_path, str):
             texts = read_jsonl(data_path)
         else:
@@ -174,7 +174,7 @@ class ChatMLDataset(Dataset):
 class DPODataset(ChatMLDataset):
     def __init__(
             self,
-            data_path: Optional[str, List[str]],
+            data_path: Union[str, List[str]],
             tokenizer,
             max_length: int = 256,
     ):

@@ -8,9 +8,6 @@ export CUDA_VISIBLE_DEVICES=3,4,5,7
 # 设置环境变量
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# GPU数量
-NUM_GPUS=4
-
 # 配置文件路径
 CONFIG_PATH="config/pretrain_config.yaml"
 
@@ -18,7 +15,7 @@ CONFIG_PATH="config/pretrain_config.yaml"
 # 单GPU训练使用: python train.py --task_type pretrain --config_path $CONFIG_PATH
 # 多GPU训练使用下面的deepspeed命令
 
-deepspeed --num_gpus=$NUM_GPUS train.py \
+deepspeed train.py \
     --task_type pretrain \
     --config_path $CONFIG_PATH
 
