@@ -23,7 +23,7 @@
       "warmup_num_steps": 1000,
       "total_num_steps": 50000
     }
-  }
+  },
 
   "zero_optimization": {
     "stage": 2,
