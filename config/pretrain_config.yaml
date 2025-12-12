@@ -19,7 +19,8 @@ model:
 data:
   train_data_path: "data/pretrain_hq.jsonl"
   max_length: 1024
-  num_workers: 4  # 增加数据加载并行度，建议设置为CPU核心数的1/4到1/2
+  num_workers: 8           # 数据加载worker数量，建议设置为CPU核心数的1/4到1/2
+  prefetch_factor: 4       # 每个worker预取的batch数，增加可减少等待时间
 
 # 训练配置
 training:
@@ -30,9 +31,9 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 16  # 提升到16，更好地利用GPU
-  per_device_eval_batch_size: 32   # 评估时可以用更大的batch
-  gradient_accumulation_steps: 2   # 减少累积步数以加快更新，有效批次大小保持为 16*2*num_gpus
+  per_device_train_batch_size: 128  # V100-32GB可以支持更大的batch，从108提升到256
+  per_device_eval_batch_size: 128   # 评估时batch size
+  gradient_accumulation_steps: 1    # 显存充足，不需要累积，直接更新最快
   
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
@@ -45,7 +46,7 @@ training:
   adam_epsilon: 1.0e-8
   
   # 其他配置
-  gradient_checkpointing: true      # 启用梯度检查点，节省显存
+  gradient_checkpointing: false     # 显存充足，关闭checkpointing以换取更快速度
   max_grad_norm: 1.0                # 梯度裁剪
   seed: 42
   dataloader_pin_memory: true       # 启用pin_memory加速数据传输
