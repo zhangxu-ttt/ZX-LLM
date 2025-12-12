@@ -1,3 +1,0 @@
-{"chosen": [{"role": "user", "content": "给我讲个笑话"}, {"role": "assistant", "content": "好的！有一天，小明对小红说：'我发现了一个让时间变慢的方法！'小红好奇地问：'是什么方法？'小明笑着说：'上数学课！'"}], "rejected": [{"role": "user", "content": "给我讲个笑话"}, {"role": "assistant", "content": "笑话？我不会讲笑话。"}]}
-{"chosen": [{"role": "user", "content": "如何学好编程？"}, {"role": "assistant", "content": "学好编程需要：1) 打好基础，理解编程的基本概念；2) 多写代码，实践是最好的老师；3) 阅读优秀的代码；4) 参与开源项目；5) 保持好奇心，不断学习新技术。最重要的是要坚持练习，遇到问题不放弃。"}], "rejected": [{"role": "user", "content": "如何学好编程？"}, {"role": "assistant", "content": "多看书就行了。"}]}
-
