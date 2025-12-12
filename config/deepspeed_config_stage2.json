@@ -4,10 +4,11 @@
   "gradient_accumulation_steps": "auto",
   "gradient_clipping": 1.0,
   
+
   "optimizer": {
     "type": "AdamW",
     "params": {
-      "lr": "auto",
+      "lr": 5e-5,
       "betas": [0.9, 0.999],
       "eps": 1e-8,
       "weight_decay": 0.01
@@ -17,12 +18,12 @@
   "scheduler": {
     "type": "WarmupDecayLR",
     "params": {
-      "warmup_min_lr": 0.00001,
-      "warmup_max_lr": "auto",
-      "warmup_num_steps": "auto",
-      "total_num_steps": "auto"
+      "warmup_min_lr": 1e-5,
+      "warmup_max_lr": 5e-4,
+      "warmup_num_steps": 1000,
+      "total_num_steps": 50000
     }
-  },
+  }
 
   "zero_optimization": {
     "stage": 2,
