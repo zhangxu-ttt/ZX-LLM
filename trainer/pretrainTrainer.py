@@ -60,13 +60,12 @@ class PretrainTrainer(BaseTrainer):
         labels = batch['y'].to(self.model_engine.device)
         loss_mask = batch['loss_mask'].to(self.model_engine.device)
         attention_mask = None
-        if self.tokenizer.pad_token_id is not None:
-            attention_mask = (input_ids != self.tokenizer.pad_token_id)
         
         # 前向传播
         outputs = self.model_engine(
             input_ids=input_ids,
-            labels=labels
+            attention_mask=attention_mask,
+            labels=labels,
         )
         
         # 获取损失

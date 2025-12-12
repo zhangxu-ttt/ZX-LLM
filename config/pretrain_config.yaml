@@ -28,7 +28,7 @@ training:
   num_epochs: 3
   learning_rate: 5.0e-5
   weight_decay: 0.01
-  warmup_steps: 2000               # 增加warmup步数，更平滑
+  warmup_steps: 500               # 增加warmup步数，更平滑
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置

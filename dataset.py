@@ -54,7 +54,10 @@ class TextDataset(Dataset):
             return_tensors="pt",
         )
         input_ids = encoding.input_ids.squeeze()
-        loss_mask = (input_ids != self.tokenizer.pad_token_id)
+        # 使用 attention_mask 而不是 (input_ids != pad_token_id)
+        # 原因：当 tokenizer.pad_token 被设成 eos_token 时，
+        # (input_ids != pad_token_id) 会把真实 eos 也当成 padding 屏蔽掉。
+        loss_mask = encoding.attention_mask.squeeze().to(dtype=torch.bool)
 
         x = input_ids[:-1]
         y = input_ids[1:]
