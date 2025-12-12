@@ -6,7 +6,7 @@ tokenizer_path: "tokenizer/minimind"
 # 模型配置
 model:
   vocab_size: 6400
-  n_layers: 18
+  n_layers: 24
   d_model: 1024
   q_head: 16
   kv_head: 4
