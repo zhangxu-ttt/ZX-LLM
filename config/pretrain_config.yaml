@@ -38,7 +38,7 @@ training:
 
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
-  save_steps: 2000                  # 每多少步保存一次
+  save_steps: 1000                  # 每多少步保存一次
   logging_steps: 1                  # 每多少步记录日志
   
   # 其他配置

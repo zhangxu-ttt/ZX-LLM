@@ -8,7 +8,6 @@ from typing import Dict, Optional, Any
 
 import torch
 import torch.nn as nn
-from deepspeed.utils.debug import print_rank0
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 import deepspeed
@@ -136,8 +135,6 @@ class BaseTrainer(ABC):
             if hasattr(model, 'gradient_checkpointing_enable'):
                 model.gradient_checkpointing_enable()
                 self.print_main_process("已启用梯度检查点")
-
-        self.print_main_process(f"模型参数数量: {sum(p.numel() for p in model.parameters())}")
         
         return model
     
@@ -340,8 +337,9 @@ class BaseTrainer(ABC):
                     break
             
             # Epoch结束，保存检查点
-            # 注意：f-string 会在函数调用前求值，多卡时非主进程也必须能计算 avg_epoch_loss
-            avg_epoch_loss = epoch_loss / epoch_steps if epoch_steps > 0 else 0.0
+            if self.is_main_process():
+                avg_epoch_loss = epoch_loss / epoch_steps
+
             self.print_main_process(f"\nEpoch {epoch + 1} 完成，平均损失: {avg_epoch_loss:.4f}")
             
             self.save_checkpoint(tag=f"epoch-{epoch + 1}")
@@ -441,22 +439,27 @@ class BaseTrainer(ABC):
         Args:
             tag: 检查点标签（如 "step-1000" 或 "epoch-1"）
         """
-        if not self.is_main_process():
-            return
-        
-        checkpoint_dir = self.output_dir / f"checkpoint-{tag}"
-        
-        # 使用DeepSpeed保存检查点
+        # DeepSpeed 的 save_checkpoint 在多卡下通常需要所有 rank 共同参与调用（collective）。
+        # 因此这里不再只让主进程调用；但清理/打印仍只在主进程进行。
+        checkpoint_tag = f"checkpoint-{tag}"
+        checkpoint_dir = self.output_dir / checkpoint_tag
+
         self.model_engine.save_checkpoint(
             save_dir=str(self.output_dir),
-            tag=tag,
-            client_state={'step': self.global_step, 'epoch': self.epoch}
+            tag=checkpoint_tag,
+            client_state={'step': self.global_step, 'epoch': self.epoch} if self.is_main_process() else {}
         )
-        
-        print(f"检查点已保存: {checkpoint_dir}")
-        
-        # 管理检查点数量
-        self.manage_checkpoints()
+
+        # 等所有 rank 保存完成后，再由主进程做清理，避免并发删除引发问题
+        if deepspeed.comm.is_initialized():
+            deepspeed.comm.barrier()
+
+        if self.is_main_process():
+            print(f"检查点已保存: {checkpoint_dir}")
+            self.manage_checkpoints()
+
+        if deepspeed.comm.is_initialized():
+            deepspeed.comm.barrier()
     
     def load_checkpoint(self, checkpoint_path: str):
         """
@@ -465,21 +468,31 @@ class BaseTrainer(ABC):
         Args:
             checkpoint_path: 检查点路径
         """
-        print(f"从检查点恢复: {checkpoint_path}")
-        
-        # 使用DeepSpeed加载检查点
-        _, client_state = self.model_engine.load_checkpoint(
-            load_dir=checkpoint_path,
-            tag=None
-        )
-        
+        ckpt_path = Path(checkpoint_path)
+        load_dir = str(ckpt_path)
+        tag = None
+
+        # 兼容两种传参：
+        # 1) 传 output_dir：让 DeepSpeed 自动找最新（tag=None）
+        # 2) 传到具体 checkpoint 子目录：例如 output/pretrain/checkpoint-step-2000
+        if ckpt_path.is_dir() and ckpt_path.name.startswith('checkpoint-'):
+            load_dir = str(ckpt_path.parent)
+            tag = ckpt_path.name
+
+        self.print_main_process(f"从检查点恢复: load_dir={load_dir}, tag={tag}")
+
+        _, client_state = self.model_engine.load_checkpoint(load_dir=load_dir, tag=tag)
+
         if client_state:
-            self.global_step = client_state.get('step', 0)
-            self.epoch = client_state.get('epoch', 0)
-            print(f"已恢复到步数: {self.global_step}, 轮数: {self.epoch}")
+            self.global_step = int(client_state.get('step', 0))
+            self.epoch = int(client_state.get('epoch', 0))
+            self.print_main_process(f"已恢复到步数: {self.global_step}, 轮数: {self.epoch}")
     
     def manage_checkpoints(self):
         """管理检查点数量，删除旧的检查点"""
+        if not self.is_main_process():
+            return
+
         save_total_limit = self.config['output'].get('save_total_limit', None)
         if save_total_limit is None or save_total_limit <= 0:
             return
