@@ -31,8 +31,8 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 128  # V100-32GB可以支持更大的batch，从108提升到256
-  per_device_eval_batch_size: 128   # 评估时batch size
+  per_device_train_batch_size: 32  # V100-32GB可以支持更大的batch，从108提升到256
+  per_device_eval_batch_size: 32   # 评估时batch size
   gradient_accumulation_steps: 1    # 显存充足，不需要累积，直接更新最快
   
   # 日志和保存
