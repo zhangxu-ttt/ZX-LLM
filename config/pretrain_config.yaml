@@ -26,7 +26,7 @@ data:
 # 训练配置
 training:
   num_epochs: 3
-  learning_rate: 5.0e-6
+  learning_rate: 5.0e-5
   weight_decay: 0.01
   warmup_steps: 2000               # 增加warmup步数，更平滑
   max_steps: -1                    # -1表示使用num_epochs
@@ -34,8 +34,8 @@ training:
   # 批次大小配置
   per_device_train_batch_size: 48  # 逐步增加batch size
   per_device_eval_batch_size: 48   # 评估时batch size
-  gradient_accumulation_steps: 2    # 使用梯度累积减小有效学习率，避免inf
-  
+  gradient_accumulation_steps: 2    #
+
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
   save_steps: 2000                 # 每多少步保存一次
