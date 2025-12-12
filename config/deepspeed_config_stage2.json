@@ -4,7 +4,6 @@
   "gradient_accumulation_steps": "auto",
   "gradient_clipping": 1.0,
   
-
   "optimizer": {
     "type": "AdamW",
     "params": {
@@ -32,21 +31,25 @@
       "pin_memory": false
     },
     "allgather_partitions": true,
-    "allgather_bucket_size": 2e8,
+    "allgather_bucket_size": 5e8,        // 优化
     "overlap_comm": true,
     "reduce_scatter": true,
-    "reduce_bucket_size": 2e8,
+    "reduce_bucket_size": 5e8,           // 优化
     "contiguous_gradients": true,
     "round_robin_gradients": true
   },
-  
-  "bf16": {
-       "enabled": true
-   },
-  
+
+  "fp16": {
+    "enabled": true,
+    "loss_scale": 0,
+    "initial_scale_power": 12,           // 优化
+    "loss_scale_window": 1000,           // 优化
+    "hysteresis": 2,
+    "min_loss_scale": 1
+  },
+
   "communication_data_type": "fp16",
   "prescale_gradients": false,
   "wall_clock_breakdown": false,
-  "steps_per_print": 10
+  "steps_per_print": 50
 }
-
