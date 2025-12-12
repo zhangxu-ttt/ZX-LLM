@@ -99,6 +99,13 @@ class BaseTrainer(ABC):
         """准备tokenizer"""
         tokenizer_path = self.config.get('tokenizer_path', 'tokenizer/minimind')
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+        # 预训练常用 padding="max_length"，必须确保存在 pad_token
+        if tokenizer.pad_token_id is None:
+            if tokenizer.eos_token is not None:
+                tokenizer.pad_token = tokenizer.eos_token
+            else:
+                # 兜底：尽量避免改 vocab（否则需要 resize embeddings）
+                raise ValueError("Tokenizer 缺少 pad_token 且没有 eos_token，无法安全进行 padding。")
         return tokenizer
     
     @abstractmethod

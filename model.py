@@ -281,12 +281,12 @@ class GroupQueryAttention(nn.Module):
         k = k.repeat(1, 1, self.q_head // self.kv_head, 1).transpose(1, 2)  # batch q_head all_seq_len head_dim
         v = v.repeat(1, 1, self.q_head // self.kv_head, 1).transpose(1, 2)  # batch q_head all_seq_len head_dim
 
-        if attn_mask is not None:
-            attn_mask = attn_mask.to(q.dtype)
-            output = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout_p, is_causal=False).transpose(
+        if attn_mask is  None:
+            output = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout_p, is_causal=True).transpose(
                 1, 2)  # batch all_seq_len q_head head_dim
         else:
-            output = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout_p, is_causal=True).transpose(
+            attn_mask = attn_mask.to(q.dtype)
+            output = F.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, dropout_p=self.dropout_p, is_causal=False).transpose(
                 1, 2)  # batch all_seq_len q_head head_dim
         output = output.reshape(batch_size, -1, self.d_model)
         output = self.o_proj(output)
