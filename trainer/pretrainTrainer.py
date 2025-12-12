@@ -72,8 +72,9 @@ class PretrainTrainer(BaseTrainer):
         # 注意: TransformerModel的forward已经计算了loss，但我们需要重新应用mask
         if loss_mask is not None:
             # 重新计算masked loss
-            logits = outputs.logits[:, :-1, :]  # [batch, seq_len-1, vocab]
-            labels_shifted = labels[:, :]  # [batch, seq_len-1]
+            logits = outputs.logits[:, :-1, :].contiguous()  # [batch, seq_len-1, vocab]
+            labels_shifted = labels[:, 1:].contiguous()  # [batch, seq_len-1]
+            loss_mask = loss_mask[:, 1:].contiguous()  # [batch, seq_len-1]
             
             # 展平
             logits_flat = logits.reshape(-1, logits.size(-1))  # [batch * seq_len, vocab]
