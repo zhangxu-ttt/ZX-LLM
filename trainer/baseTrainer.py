@@ -9,6 +9,7 @@ from typing import Dict, Optional, Any
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.distributed import DistributedSampler
 import deepspeed
 from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
 from tqdm import tqdm
@@ -39,7 +40,8 @@ class BaseTrainer(ABC):
         """
         self.config_path = config_path
         self.local_rank = local_rank
-        
+        self.world_size = int(os.environ.get('WORLD_SIZE', '1'))
+
         # 加载配置
         self.config = self.load_config(config_path)
         
@@ -142,11 +144,10 @@ class BaseTrainer(ABC):
             ds_config = json.load(f)
         
         # 设置批次大小参数
-        world_size = int(os.environ.get('WORLD_SIZE', '1'))
         train_batch_size = (
             self.config['training']['per_device_train_batch_size'] *
             self.config['training']['gradient_accumulation_steps'] *
-            world_size
+            self.world_size
         )
         ds_config['train_batch_size'] = train_batch_size
         ds_config['train_micro_batch_size_per_gpu'] = self.config['training']['per_device_train_batch_size']
@@ -180,7 +181,6 @@ class BaseTrainer(ABC):
         max_steps = self.config['training'].get('max_steps', -1)
         if max_steps > 0:
             return max_steps
-        world_size = int(os.environ.get('WORLD_SIZE', '1'))
         num_epochs = self.config['training']['num_epochs']
         steps_per_epoch = len(self.train_dataset) // (
             self.config['training']['per_device_train_batch_size'] *
@@ -223,13 +223,29 @@ class BaseTrainer(ABC):
         self.print_main_process("开始训练")
         self.print_main_process("=" * 80)
         
-        # 准备DataLoader
+        # 准备DataLoader和Sampler
+        if self.world_size > 1:
+            train_sampler = DistributedSampler(
+                self.train_dataset,
+                num_replicas=self.world_size,
+                rank=self.local_rank,
+                shuffle=True,
+                seed=self.config['training'].get('seed', 42),
+                drop_last=self.config['training'].get('dataloader_drop_last', True)
+            )
+            shuffle = False
+        else:
+            train_sampler = None
+            shuffle = True
+
         train_dataloader = DataLoader(
             self.train_dataset,
             batch_size=self.config['training']['per_device_train_batch_size'],
-            shuffle=True,
+            shuffle=shuffle,
+            sampler=train_sampler,
             num_workers=self.config['data'].get('num_workers', 0),
-            pin_memory=True
+            pin_memory=self.config['training'].get('dataloader_pin_memory', True),
+            drop_last=self.config['training'].get('dataloader_drop_last', True) if train_sampler is None else False
         )
         
         num_epochs = self.config['training']['num_epochs']

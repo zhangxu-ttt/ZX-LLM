@@ -19,7 +19,7 @@ model:
 data:
   train_data_path: "data/pretrain_hq.jsonl"
   max_length: 1024
-  num_workers: 0
+  num_workers: 4  # 增加数据加载并行度，建议设置为CPU核心数的1/4到1/2
 
 # 训练配置
 training:
@@ -30,9 +30,9 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 2
-  per_device_eval_batch_size: 4
-  gradient_accumulation_steps: 8   # 有效批次大小 = per_device_train_batch_size * gradient_accumulation_steps * num_gpus
+  per_device_train_batch_size: 16  # 提升到16，更好地利用GPU
+  per_device_eval_batch_size: 32   # 评估时可以用更大的batch
+  gradient_accumulation_steps: 2   # 减少累积步数以加快更新，有效批次大小保持为 16*2*num_gpus
   
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
@@ -45,9 +45,11 @@ training:
   adam_epsilon: 1.0e-8
   
   # 其他配置
-  gradient_checkpointing: false     # 启用梯度检查点
-  max_grad_norm: 1.0              # 梯度裁剪
+  gradient_checkpointing: true      # 启用梯度检查点，节省显存
+  max_grad_norm: 1.0                # 梯度裁剪
   seed: 42
+  dataloader_pin_memory: true       # 启用pin_memory加速数据传输
+  dataloader_drop_last: true        # 丢弃最后不完整的batch，保证各GPU负载均衡
   
 # DeepSpeed配置
 deepspeed:
