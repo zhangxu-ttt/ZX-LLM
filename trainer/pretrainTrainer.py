@@ -1,5 +1,6 @@
 from typing import Dict, Tuple
 import torch
+import torch.nn.functional as F
 
 from trainer.baseTrainer import BaseTrainer
 from dataset import TextDataset
@@ -70,15 +71,14 @@ class PretrainTrainer(BaseTrainer):
         
         # 获取损失
         loss = outputs.loss
-        
-        # 应用loss mask（只计算非padding位置的损失）
-        # 注意: TransformerModel的forward已经计算了loss，这里需要套上loss_mask重新算一遍
+
+        # 注意: TransformerModel的forward虽然计算了loss，但是没有计算loss_mask的部分，这里套上loss_mask重新算一遍
         if loss_mask is not None:
             logits = outputs.logits.contiguous()  
 
-            logits_flat = logits.reshape(-1, logits.size(-1))  # [batch * seq_len, vocab]
-            labels_flat = labels.reshape(-1)  # [batch * seq_len]
-            mask_flat = loss_mask.reshape(-1)  # [batch * seq_len]
+            logits_flat = logits.reshape(-1, logits.size(-1))
+            labels_flat = labels.reshape(-1)
+            mask_flat = loss_mask.reshape(-1)
 
             loss = F.cross_entropy(logits_flat, labels_flat, reduction='none')
             loss = loss[mask_flat].mean()
