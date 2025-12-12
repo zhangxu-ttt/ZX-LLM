@@ -46,8 +46,7 @@
     "initial_scale_power": 12,
     "loss_scale_window": 500,
     "hysteresis": 2,
-    "min_loss_scale": 1,
-    "loss_scale_mode": "dynamic"
+    "min_loss_scale": 1
   },
   
   "communication_data_type": "fp16",
