@@ -363,16 +363,16 @@ class TransformerLayer(nn.Module):
         return x, kv_cache
 
 def create_custom_forward(module):
-    def custom_forward(hidden_states, attn_mask):
-        # 简化参数，只传必需的
+    def custom_forward(hidden_states, attn_mask, use_cache, kv_cache, start_pos):
+        # 注意：gradient checkpointing 时强制 use_cache=False
         output, _ = module(
             x=hidden_states,
             attn_mask=attn_mask,
             use_cache=False,  # checkpoint 时不使用 cache
-            kv_cache=None,
-            start_pos=0
+            kv_cache=None,     # checkpoint 时不使用 kv_cache
+            start_pos=start_pos
         )
-        return output
+        return output, None  # 返回 None 作为 kv_cache 的占位符
     return custom_forward
 
 class TransformerModel(PreTrainedModel, GenerationMixin):
