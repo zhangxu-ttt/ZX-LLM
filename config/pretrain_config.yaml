@@ -19,8 +19,9 @@ model:
 data:
   train_data_path: "data/pretrain_hq.jsonl"
   max_length: 1024
-  num_workers: 8           # 数据加载worker数量，建议设置为CPU核心数的1/4到1/2
-  prefetch_factor: 2       # 每个worker预取的batch数，增加可减少等待时间
+  num_workers: 16              # 增加到CPU核心数的1/2到2/3
+  prefetch_factor: 4           # 增加预取buffer，从2改到4
+  persistent_workers: true     # 添加这行：保持worker进程不重启
 
 # 训练配置
 training:
@@ -31,8 +32,8 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 8  # 逐步增加batch size
-  per_device_eval_batch_size: 8   # 评估时batch size
+  per_device_train_batch_size: 16  # 逐步增加batch size
+  per_device_eval_batch_size: 16   # 评估时batch size
   gradient_accumulation_steps: 2    # 使用梯度累积减小有效学习率，避免inf
   
   # 日志和保存
