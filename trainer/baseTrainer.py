@@ -8,6 +8,7 @@ from typing import Dict, Optional, Any
 
 import torch
 import torch.nn as nn
+from deepspeed.utils.debug import print_rank0
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 import deepspeed
@@ -129,13 +130,17 @@ class BaseTrainer(ABC):
             model = TransformerModel.from_pretrained(pretrained_path)
         else:
             model = TransformerModel(model_config)
+
+        # 从权重文件中读取模型
         
         # 启用梯度检查点
         if self.config['training'].get('gradient_checkpointing', False):
             if hasattr(model, 'gradient_checkpointing_enable'):
                 model.gradient_checkpointing_enable()
                 self.print_main_process("已启用梯度检查点")
-        
+
+        print_rank0(f"模型参数数量: {sum(p.numel() for p in model.parameters())}")
+
         return model
     
     def initialize_deepspeed(self):

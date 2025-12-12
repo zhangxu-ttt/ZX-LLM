@@ -72,29 +72,16 @@ class PretrainTrainer(BaseTrainer):
         loss = outputs.loss
         
         # 应用loss mask（只计算非padding位置的损失）
-        # 注意: TransformerModel的forward已经计算了loss，但我们需要重新应用mask
+        # 注意: TransformerModel的forward已经计算了loss，这里需要套上loss_mask重新算一遍
         if loss_mask is not None:
-            # 重新计算masked loss
-            logits = outputs.logits[:, :-1, :].contiguous()  # [batch, seq_len-1, vocab]
-            labels_shifted = labels[:, 1:].contiguous()  # [batch, seq_len-1]
-            loss_mask = loss_mask[:, 1:].contiguous()  # [batch, seq_len-1]
-            
-            # 展平
+            logits = outputs.logits.contiguous()  
+
             logits_flat = logits.reshape(-1, logits.size(-1))  # [batch * seq_len, vocab]
-            labels_flat = labels_shifted.reshape(-1)  # [batch * seq_len]
+            labels_flat = labels.reshape(-1)  # [batch * seq_len]
             mask_flat = loss_mask.reshape(-1)  # [batch * seq_len]
-            
-            # 计算每个位置的损失
-            loss_fct = torch.nn.CrossEntropyLoss(reduction='none')
-            loss_per_token = loss_fct(logits_flat, labels_flat)  # [batch * seq_len]
-            
-            # 应用mask并计算平均
-            # 注意：不能用 loss_per_token * mask（0 * inf -> nan），应当用筛选/ignore_index
-            mask_bool = mask_flat.to(torch.bool)
-            if mask_bool.any():
-                loss = loss_per_token[mask_bool].mean()
-            else:
-                loss = torch.tensor(0.0, device=mask_flat.device, dtype=loss_per_token.dtype)
+
+            loss = F.cross_entropy(logits_flat, labels_flat, reduction='none')
+            loss = loss[mask_flat].mean()
         
         return loss
 
