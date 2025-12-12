@@ -128,8 +128,6 @@ class BaseTrainer(ABC):
             if hasattr(model, 'gradient_checkpointing_enable'):
                 model.gradient_checkpointing_enable()
                 self.print_main_process("已启用梯度检查点")
-
-        model = model.compile()
         
         return model
     
