@@ -32,8 +32,8 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 16  # 逐步增加batch size
-  per_device_eval_batch_size: 16   # 评估时batch size
+  per_device_train_batch_size: 48  # 逐步增加batch size
+  per_device_eval_batch_size: 48   # 评估时batch size
   gradient_accumulation_steps: 2    # 使用梯度累积减小有效学习率，避免inf
   
   # 日志和保存
