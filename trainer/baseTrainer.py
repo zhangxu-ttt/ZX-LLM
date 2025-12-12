@@ -137,7 +137,7 @@ class BaseTrainer(ABC):
                 model.gradient_checkpointing_enable()
                 self.print_main_process("已启用梯度检查点")
 
-        print_rank0(f"模型参数数量: {sum(p.numel() for p in model.parameters())}")
+        self.print_main_process(f"模型参数数量: {sum(p.numel() for p in model.parameters())}")
         
         return model
     
