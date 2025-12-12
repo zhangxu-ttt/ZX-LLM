@@ -18,9 +18,9 @@
   "scheduler": {
     "type": "WarmupDecayLR",
     "params": {
-      "warmup_min_lr": 1e-6,
+      "warmup_min_lr": 0,
       "warmup_max_lr": 5e-5,
-      "warmup_num_steps": 1000,
+      "warmup_num_steps": 2000,
       "total_num_steps": 50000
     }
   },
@@ -43,10 +43,11 @@
   "fp16": {
     "enabled": true,
     "loss_scale": 0,
-    "initial_scale_power": 16,
-    "loss_scale_window": 1000,
+    "initial_scale_power": 12,
+    "loss_scale_window": 500,
     "hysteresis": 2,
-    "min_loss_scale": 1
+    "min_loss_scale": 1,
+    "loss_scale_mode": "dynamic"
   },
   
   "communication_data_type": "fp16",

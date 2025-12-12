@@ -87,7 +87,14 @@ class PretrainTrainer(BaseTrainer):
             
             # 应用mask并计算平均
             masked_loss = loss_per_token * mask_flat
-            loss = masked_loss.sum() / (mask_flat.sum() + 1e-8)
+            mask_sum = mask_flat.sum()
+            
+            # 数值稳定性检查：避免除以零或极小值
+            if mask_sum < 1.0:
+                # 如果没有有效token，返回零损失（避免NaN/Inf）
+                loss = torch.tensor(0.0, device=mask_flat.device, dtype=masked_loss.dtype)
+            else:
+                loss = masked_loss.sum() / mask_sum
         
         return loss
 

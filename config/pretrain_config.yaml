@@ -20,20 +20,20 @@ data:
   train_data_path: "data/pretrain_hq.jsonl"
   max_length: 1024
   num_workers: 8           # 数据加载worker数量，建议设置为CPU核心数的1/4到1/2
-  prefetch_factor: 4       # 每个worker预取的batch数，增加可减少等待时间
+  prefetch_factor: 2       # 每个worker预取的batch数，增加可减少等待时间
 
 # 训练配置
 training:
   num_epochs: 3
   learning_rate: 5.0e-5
   weight_decay: 0.01
-  warmup_steps: 1000
+  warmup_steps: 2000               # 增加warmup步数，更平滑
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 32  # V100-32GB可以支持更大的batch，从108提升到256
-  per_device_eval_batch_size: 32   # 评估时batch size
-  gradient_accumulation_steps: 1    # 显存充足，不需要累积，直接更新最快
+  per_device_train_batch_size: 64  # 逐步增加batch size
+  per_device_eval_batch_size: 64   # 评估时batch size
+  gradient_accumulation_steps: 2    # 使用梯度累积减小有效学习率，避免inf
   
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
