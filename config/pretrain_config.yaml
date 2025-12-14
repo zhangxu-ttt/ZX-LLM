@@ -56,7 +56,7 @@ deepspeed:
 output:
   output_dir: "output/pretrain"
   save_total_limit: 3              # 最多保存3个检查点
-  resume_from_checkpoint: null     # 从检查点恢复训练，null表示从头开始
+  resume_from_checkpoint: "output/pretrain"
   
 # WandB配置
 wandb:
