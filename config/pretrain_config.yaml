@@ -56,7 +56,7 @@ deepspeed:
 output:
   output_dir: "output/pretrain"
   save_total_limit: 5
-  resume_from_checkpoint: "output/pretrain"
+#  resume_from_checkpoint: "output/pretrain"
   
 # WandB配置
 wandb:
