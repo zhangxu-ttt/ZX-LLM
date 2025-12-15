@@ -32,8 +32,8 @@ training:
   max_steps: -1                    # -1表示使用num_epochs
   
   # 批次大小配置
-  per_device_train_batch_size: 24  # 逐步增加batch size
-  per_device_eval_batch_size: 24   # 评估时batch size
+  per_device_train_batch_size: 20  # 逐步增加batch size
+  per_device_eval_batch_size: 20   # 评估时batch size
   gradient_accumulation_steps: 2    #
 
   # 日志和保存
@@ -43,7 +43,6 @@ training:
   
   # 其他配置
   gradient_checkpointing: false     # 显存充足，关闭checkpointing以换取更快速度
-  max_grad_norm: 1.0                # 梯度裁剪
   seed: 42
   dataloader_pin_memory: true       # 启用pin_memory加速数据传输
   dataloader_drop_last: true        # 丢弃最后不完整的batch，保证各GPU负载均衡
