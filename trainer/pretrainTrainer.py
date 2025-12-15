@@ -64,6 +64,7 @@ class PretrainTrainer(BaseTrainer):
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=labels,
+            loss_mask=loss_mask
         )
 
         loss = outputs.loss
