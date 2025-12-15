@@ -50,7 +50,6 @@ training:
   
 # DeepSpeed配置
 deepspeed:
-  # 纯数据并行（等价 DDP）：对 370M/32G 这类规模通常更快、更简单
   config_path: "config/deepspeed_config_ddp.json"
   
 # 输出配置
