@@ -26,7 +26,7 @@ data:
 # 训练配置
 training:
   num_epochs: 5
-  learning_rate: 1e-5
+  learning_rate: 2e-5
   weight_decay: 0.01
   warmup_steps: 500               # 增加warmup步数，更平滑
   max_steps: -1                    # -1表示使用num_epochs
@@ -34,28 +34,30 @@ training:
   # 批次大小配置
   per_device_train_batch_size: 20  # 逐步增加batch size
   per_device_eval_batch_size: 20   # 评估时batch size
-  gradient_accumulation_steps: 2    #
+  gradient_accumulation_steps: 3    #
 
   # 日志和保存
   eval_steps: 1000                  # 每多少步评估一次
-  save_steps: 4000                  # 每多少步保存一次
+  save_steps: 1000                  # 每多少步保存一次
   logging_steps: 1                  # 每多少步记录日志
   
   # 其他配置
   gradient_checkpointing: false     # 显存充足，关闭checkpointing以换取更快速度
+  max_grad_norm: 1.0                # 梯度裁剪
   seed: 42
   dataloader_pin_memory: true       # 启用pin_memory加速数据传输
   dataloader_drop_last: true        # 丢弃最后不完整的batch，保证各GPU负载均衡
   
 # DeepSpeed配置
 deepspeed:
-  config_path: "config/deepspeed_config_stage2.json"
+  # 纯数据并行（等价 DDP）：对 370M/32G 这类规模通常更快、更简单
+  config_path: "config/deepspeed_config_ddp.json"
   
 # 输出配置
 output:
   output_dir: "output/pretrain"
-  save_total_limit: 5              # 最多保存3个检查点
-#  resume_from_checkpoint: "output/pretrain"
+  save_total_limit: 3              # 最多保存3个检查点
+  resume_from_checkpoint: "output/pretrain"
   
 # WandB配置
 wandb:

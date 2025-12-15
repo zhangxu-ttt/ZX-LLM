@@ -420,6 +420,7 @@ class TransformerModel(PreTrainedModel, GenerationMixin):
                 start_pos: int = 0,
                 output_hidden_states: bool = False,
                 return_dict: bool = True,
+                loss_mask: torch.Tensor = None,
                 **kwargs  
                 ):
         x = self.embedding(input_ids)
@@ -461,6 +462,8 @@ class TransformerModel(PreTrainedModel, GenerationMixin):
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
+            ## 保留loss_mask等于1的部分，其余部分置为-100，在计算交叉熵时跳过
+            labels = labels.masked_fill(~loss_mask, -100)
             loss = loss_fct(logits.view(-1, self.vocab_size), labels.view(-1))
 
         if return_dict:
