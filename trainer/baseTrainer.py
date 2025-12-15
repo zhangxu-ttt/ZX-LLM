@@ -150,7 +150,7 @@ class BaseTrainer(ABC):
         with open(ds_config_path, 'r') as f:
             ds_config = json.load(f)
         
-        # 设置批次大小参数
+
         train_batch_size = (
             self.config['training']['per_device_train_batch_size'] *
             self.config['training']['gradient_accumulation_steps'] *
@@ -339,8 +339,7 @@ class BaseTrainer(ABC):
             # Epoch结束，保存检查点
             if self.is_main_process():
                 avg_epoch_loss = epoch_loss / epoch_steps
-
-            self.print_main_process(f"\nEpoch {epoch + 1} 完成，平均损失: {avg_epoch_loss:.4f}")
+                self.print_main_process(f"\nEpoch {epoch + 1} 完成，平均损失: {avg_epoch_loss:.4f}")
             
             self.save_checkpoint(tag=f"epoch-{epoch + 1}")
             
