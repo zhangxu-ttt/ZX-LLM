@@ -152,6 +152,25 @@ class BaseTrainer(ABC):
         with open(ds_config_path, 'r') as f:
             ds_config = json.load(f)
         
+        # 对齐关键超参：以YAML为准覆盖DeepSpeed配置，避免“看起来一样实际不一样”
+        train_cfg = self.config.get('training', {})
+        total_steps = self.calculate_total_steps()
+        lr = train_cfg.get('learning_rate')
+        weight_decay = train_cfg.get('weight_decay')
+        warmup_steps = train_cfg.get('warmup_steps')
+
+        if isinstance(ds_config.get('optimizer'), dict) and isinstance(ds_config['optimizer'].get('params'), dict):
+            if lr is not None:
+                ds_config['optimizer']['params']['lr'] = lr
+            if weight_decay is not None:
+                ds_config['optimizer']['params']['weight_decay'] = weight_decay
+
+        # 仅当使用DS内置scheduler时，这些字段才会生效；但写入能保证两端配置一致便于排查
+        if isinstance(ds_config.get('scheduler'), dict) and isinstance(ds_config['scheduler'].get('params'), dict):
+            if warmup_steps is not None:
+                ds_config['scheduler']['params']['warmup_num_steps'] = warmup_steps
+            ds_config['scheduler']['params']['total_num_steps'] = total_steps
+
 
         train_batch_size = (
             self.config['training']['per_device_train_batch_size'] *
@@ -182,6 +201,20 @@ class BaseTrainer(ABC):
         self.print_main_process(f"训练批次大小: {train_batch_size}")
         self.print_main_process(f"每设备批次大小: {self.config['training']['per_device_train_batch_size']}")
         self.print_main_process(f"梯度累积步数: {self.config['training']['gradient_accumulation_steps']}")
+        # 打印真实生效的学习率（以optimizer为准）
+        try:
+            self.print_main_process(f"生效学习率: {optimizer.param_groups[0]['lr']:.6g}")
+        except Exception:
+            pass
+        # 打印ZeRO/Offload信息，方便确认是stage0还是stage2/是否offload
+        zero_stage = ds_config.get('zero_optimization', {}).get('stage', 0) if isinstance(ds_config.get('zero_optimization'), dict) else 0
+        offload_device = None
+        if isinstance(ds_config.get('zero_optimization'), dict):
+            offload = ds_config['zero_optimization'].get('offload_optimizer')
+            if isinstance(offload, dict):
+                offload_device = offload.get('device')
+        self.print_main_process(f"ZeRO Stage: {zero_stage}  Offload: {offload_device or 'none'}")
+        self.print_main_process(f"预计总训练步数(total_steps): {total_steps}")
         
         return model_engine, optimizer, lr_scheduler
     
