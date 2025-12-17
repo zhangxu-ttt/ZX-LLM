@@ -201,20 +201,6 @@ class BaseTrainer(ABC):
         self.print_main_process(f"训练批次大小: {train_batch_size}")
         self.print_main_process(f"每设备批次大小: {self.config['training']['per_device_train_batch_size']}")
         self.print_main_process(f"梯度累积步数: {self.config['training']['gradient_accumulation_steps']}")
-        # 打印真实生效的学习率（以optimizer为准）
-        try:
-            self.print_main_process(f"生效学习率: {optimizer.param_groups[0]['lr']:.6g}")
-        except Exception:
-            pass
-        # 打印ZeRO/Offload信息，方便确认是stage0还是stage2/是否offload
-        zero_stage = ds_config.get('zero_optimization', {}).get('stage', 0) if isinstance(ds_config.get('zero_optimization'), dict) else 0
-        offload_device = None
-        if isinstance(ds_config.get('zero_optimization'), dict):
-            offload = ds_config['zero_optimization'].get('offload_optimizer')
-            if isinstance(offload, dict):
-                offload_device = offload.get('device')
-        self.print_main_process(f"ZeRO Stage: {zero_stage}  Offload: {offload_device or 'none'}")
-        self.print_main_process(f"预计总训练步数(total_steps): {total_steps}")
         
         return model_engine, optimizer, lr_scheduler
     

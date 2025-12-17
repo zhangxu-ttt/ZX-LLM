@@ -65,25 +65,11 @@ class SFTTrainer(BaseTrainer):
         # 前向传播
         outputs = self.model_engine(
             input_ids=input_ids,
-            labels=labels
+            labels=labels,
+            loss_mask=loss_mask
         )
-        
-        # 重新计算masked loss（只计算assistant部分）
-        logits = outputs.logits[:, :-1, :]  # [batch, seq_len-1, vocab]
-        labels_shifted = labels[:, :]  # [batch, seq_len-1]
-        
-        # 展平
-        logits_flat = logits.reshape(-1, logits.size(-1))  # [batch * seq_len, vocab]
-        labels_flat = labels_shifted.reshape(-1)  # [batch * seq_len]
-        mask_flat = loss_mask.reshape(-1)  # [batch * seq_len]
-        
-        # 计算每个位置的损失
-        loss_fct = torch.nn.CrossEntropyLoss(reduction='none')
-        loss_per_token = loss_fct(logits_flat, labels_flat)  # [batch * seq_len]
-        
-        # 应用mask（只计算assistant部分）
-        masked_loss = loss_per_token * mask_flat
-        loss = masked_loss.sum() / (mask_flat.sum() + 1e-8)
-        
+
+        loss = outputs.loss
+
         return loss
 

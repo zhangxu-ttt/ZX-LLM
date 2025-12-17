@@ -6,24 +6,25 @@ tokenizer_path: "tokenizer/minimind"
 # 模型配置
 model:
   vocab_size: 6400
-  n_layers: 12
-  d_model: 768
-  q_head: 8
+  n_layers: 24
+  d_model: 1024
+  q_head: 16
   kv_head: 4
-  d_ff: 3072
+  d_ff: 4096
   dropout_p: 0.1
-  max_seq_length: 2048
-  rope_theta: 1000000.0
+  max_seq_length: 1024
+  rope_theta: 10000.0
   
   # 如果从预训练模型加载
-  pretrained_model_path: null      # 例如: "output/pretrain/checkpoint-10000"
+  pretrained_model_path: output/pretrain/checkpoint-epoch-5      # 例如: "output/pretrain/checkpoint-epoch-5"
 
 # 数据配置
 data:
-  train_data_path: "data/sft_train.jsonl"
-  eval_data_path: "data/sft_eval.jsonl"
-  max_length: 2048
-  num_workers: 0
+  train_data_path: ["data/sft_512.jsonl", "data/sft_1024.jsonl", "data/sft_2048.jsonl"]
+  max_length: 1024
+  num_workers: 16              # 增加到CPU核心数的1/2到2/3
+  prefetch_factor: 4           # 增加预取buffer，从2改到4
+  persistent_workers: true     # 添加这行：保持worker进程不重启
 
 # 训练配置
 training:
@@ -55,12 +56,12 @@ training:
   
 # DeepSpeed配置
 deepspeed:
-  config_path: "config/deepspeed_config_stage2.json"
+  config_path: "config/deepspeed_config_stage2_sft.json"
   
 # 输出配置
 output:
   output_dir: "output/sft"
-  save_total_limit: 3
+  save_total_limit: 5
   resume_from_checkpoint: null
   
 # WandB配置
