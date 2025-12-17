@@ -20,7 +20,7 @@ class SFTTrainer(BaseTrainer):
         Returns:
             train_dataset, eval_dataset
         """
-        print("准备SFT数据集...")
+        self.print_main_process("准备SFT数据集...")
         
         # 训练集
         train_data_path = self.config['data']['train_data_path']
