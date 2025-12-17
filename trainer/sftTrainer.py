@@ -30,7 +30,7 @@ class SFTTrainer(BaseTrainer):
             max_length=self.config['data']['max_length']
         )
         
-        print(f"训练集大小: {len(train_dataset)}")
+        self.print_main_process(f"训练集大小: {len(train_dataset)}")
         
         # 验证集
         eval_dataset = None
@@ -41,7 +41,7 @@ class SFTTrainer(BaseTrainer):
                 tokenizer=self.tokenizer,
                 max_length=self.config['data']['max_length']
             )
-            print(f"验证集大小: {len(eval_dataset)}")
+            self.print_main_process(f"验证集大小: {len(eval_dataset)}")
         
         return train_dataset, eval_dataset
     

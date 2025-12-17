@@ -20,7 +20,7 @@ model:
 
 # 数据配置
 data:
-  train_data_path: ["data/sft_512.jsonl", "data/sft_1024.jsonl", "data/sft_2048.jsonl"]
+  train_data_path: ["data/sft_512.jsonl"]
   max_length: 1024
   num_workers: 16              # 增加到CPU核心数的1/2到2/3
   prefetch_factor: 4           # 增加预取buffer，从2改到4
@@ -28,7 +28,7 @@ data:
 
 # 训练配置
 training:
-  num_epochs: 3
+  num_epochs: 2
   learning_rate: 1.0e-5            # SFT通常使用较小的学习率
   weight_decay: 0.01
   warmup_steps: 100                # SFT通常使用较少的warmup
