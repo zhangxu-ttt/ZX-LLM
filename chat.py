@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser.add_argument("--mode", type=str, default="chat", help="Mode: 'chat' or 'generate'")
     args = parser.parse_args()
 
-    model = vllm.LLM(model=args.model_path)
+    model = vllm.LLM(model=args.model)
     params = vllm.SamplingParams(
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
