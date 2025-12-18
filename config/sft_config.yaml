@@ -14,9 +14,8 @@ model:
   dropout_p: 0.1
   max_seq_length: 1024
   rope_theta: 10000.0
-  
-  # 如果从预训练模型加载
-  pretrained_model_path: output/pretrain_hf/      # 例如: "output/pretrain/checkpoint-epoch-5"
+
+  pretrained_model_path: output/pretrain_hf/
 
 # 数据配置
 data:
