@@ -34,14 +34,14 @@ training:
   max_steps: -1
   
   # 批次大小配置
-  per_device_train_batch_size: 4
-  per_device_eval_batch_size: 4
-  gradient_accumulation_steps: 4
+  per_device_train_batch_size: 20
+  per_device_eval_batch_size: 20
+  gradient_accumulation_steps: 3
   
   # 日志和保存
-  eval_steps: 200
-  save_steps: 500
-  logging_steps: 10
+  eval_steps: 1000                  # 每多少步评估一次
+  save_steps: 1000                  # 每多少步保存一次
+  logging_steps: 1                  # 每多少步记录日志
   
   # 优化器配置
   adam_beta1: 0.9
