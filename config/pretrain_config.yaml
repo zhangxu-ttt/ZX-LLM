@@ -25,7 +25,7 @@ data:
 
 # 训练配置
 training:
-  num_epochs: 5
+  num_epochs: 0
   learning_rate: 2e-5
   weight_decay: 0.01
   warmup_steps: 500               # 增加warmup步数，更平滑
@@ -56,7 +56,8 @@ deepspeed:
 output:
   output_dir: "output/pretrain"
   save_total_limit: 5
-#  resume_from_checkpoint: "output/pretrain"
+  resume_from_checkpoint: "output/pretrain"
+  output_hf_dir: "output/pretrain_hf"
   
 # WandB配置
 wandb:

@@ -242,7 +242,29 @@ class BaseTrainer(ABC):
         """仅在主进程打印消息"""
         if self.is_main_process():
             print(message)
-    
+
+    def save_hf_model(self, output_path):
+        """
+        将DeepSpeed包装的模型保存为HuggingFace格式的模型
+        """
+        if not self.is_main_process():
+            return
+
+        model = self.model_engine.module if hasattr(self.model_engine, 'module') else self.model_engine
+
+        model.save_pretrained(
+            output_path,
+            safe_serialization=True  # 使用safetensors格式
+        )
+        
+        if self.tokenizer:
+            self.tokenizer.save_pretrained(output_path)
+            self.print_main_process("Tokenizer已保存")
+
+        self.print_main_process(f"HuggingFace格式模型保存完成: {output_path}")
+
+
+
     def train(self):
         """
         主训练循环
@@ -281,7 +303,7 @@ class BaseTrainer(ABC):
         eval_steps = self.config['training']['eval_steps']
         save_steps = self.config['training']['save_steps']
         max_steps = self.config['training'].get('max_steps', -1)
-        
+
         self.model_engine.train()
         
         # 训练循环
@@ -372,6 +394,10 @@ class BaseTrainer(ABC):
         self.print_main_process("\n" + "=" * 80)
         self.print_main_process("训练完成！")
         self.print_main_process("=" * 80)
+
+        output_hf_dir = self.config['training'].get('output_hf_dir', None)
+        if output_hf_dir:
+            self.save_hf_model(output_hf_dir)
             
         if self.wandb_run:
             self.wandb_run.finish()

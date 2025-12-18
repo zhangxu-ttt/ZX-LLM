@@ -63,6 +63,7 @@ output:
   output_dir: "output/sft"
   save_total_limit: 5
   resume_from_checkpoint: null
+  output_hf_dir: "output/sft_hf"
   
 # WandB配置
 wandb:
