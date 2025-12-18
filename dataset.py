@@ -170,7 +170,7 @@ class ChatMLDataset(Dataset):
         return {
             'x': x,
             'y': y,
-            'loss_mask': loss_mask,
+            'loss_mask': loss_mask.to(dtype=torch.bool)
         }
 
 
