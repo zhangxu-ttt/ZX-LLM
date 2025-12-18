@@ -59,10 +59,10 @@ deepspeed:
   
 # 输出配置
 output:
-  output_dir: "output/sft"
+  output_dir: "output/sft_512"
   save_total_limit: 5
   resume_from_checkpoint: null
-  output_hf_dir: "output/sft_hf"
+  output_hf_dir: "output/sft_512_hf"
   
 # WandB配置
 wandb:
