@@ -395,7 +395,7 @@ class BaseTrainer(ABC):
         self.print_main_process("训练完成！")
         self.print_main_process("=" * 80)
 
-        output_hf_dir = self.config['training'].get('output_hf_dir', None)
+        output_hf_dir = self.config['output'].get('output_hf_dir', None)
         if output_hf_dir:
             self.save_hf_model(output_hf_dir)
             
